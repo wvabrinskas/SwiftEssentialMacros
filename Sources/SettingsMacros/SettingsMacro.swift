@@ -50,7 +50,7 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
     var initString = SyntaxStringInterpolation(literalCapacity: variables.count + 2,
                                                interpolationCount: variables.capacity)
     
-    initString.appendLiteral("{ \n")
+    initString.appendLiteral("{ \n self.userDefaults = userDefaults \n")
 
     for variableDecl in variables {
         guard let variableValue = variableDecl.bindings.first?.initializer?.value,
@@ -62,8 +62,8 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
         syntaxString.appendLiteral("case \(variableName) \n")
         
         subscriptionString.appendLiteral("""
-                                          $\(variableName).sink { value in
-                                            UserDefaults.standard.set(value, forKey: ExampleSettings.SettingKeys.\(variableName).rawValue)
+                                          $\(variableName).sink { [userDefaults] value in
+                                            userDefaults.set(value, forKey: ExampleSettings.SettingKeys.\(variableName).rawValue)
                                           }.store(in: &cancellables) \n\n
                                           """)
         
@@ -71,7 +71,7 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
           throw SettingsError.typeAnnotationMissing(variableName)
         }
         
-        initString.appendLiteral("self.\(variableName) = UserDefaults.standard.value(forKey: ExampleSettings.SettingKeys.\(variableName).rawValue) as? \(variableType) ?? \(variableValue)\n")
+        initString.appendLiteral("self.\(variableName) = userDefaults.value(forKey: ExampleSettings.SettingKeys.\(variableName).rawValue) as? \(variableType) ?? \(variableValue)\n")
     }
     
     subscriptionString.appendLiteral("}")
@@ -113,6 +113,13 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
                                                                                            rightSquare: .rightSquareToken())))
     }))
     
+    let userDefaultsSyntax = VariableDeclSyntax(bindingSpecifier: .keyword(.let),
+                                                bindings: .init(itemsBuilder: {
+      PatternBindingSyntax(pattern: IdentifierPatternSyntax(identifier: .identifier("userDefaults")),
+                           typeAnnotation: TypeAnnotationSyntax(colon: .colonToken(),
+                                                                type: IdentifierTypeSyntax(name: .identifier("UserDefaults"))))
+    }))
+    
     let deinitFunction = DeinitializerDeclSyntax(body: .init(stringLiteral: """
                                                                        {
                                                                          cancellables.forEach { value in value.cancel() }
@@ -130,19 +137,43 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
                                                signature: .init(parameterClause: .init(parameters: .init(itemsBuilder: {}))),
                                                body: .init(stringInterpolation: subscriptionString))
     
+    /*
+     ─signature: FunctionSignatureSyntax
+     │     │ ╰─parameterClause: FunctionParameterClauseSyntax
+     │     │   ├─leftParen: leftParen
+     │     │   ├─parameters: FunctionParameterListSyntax
+     │     │   │ ╰─[0]: FunctionParameterSyntax
+     │     │   │   ├─attributes: AttributeListSyntax
+     │     │   │   ├─modifiers: DeclModifierListSyntax
+     │     │   │   ├─firstName: identifier("userDefaults")
+     │     │   │   ├─colon: colon
+     │     │   │   ├─type: IdentifierTypeSyntax
+     │     │   │   │ ╰─name: identifier("UserDefaults")
+     │     │   │   ╰─defaultValue: InitializerClauseSyntax
+     │     │   │     ├─equal: equal
+     │     │   │     ╰─value: MemberAccessExprSyntax
+     │     │   │       ├─period: period
+     │     │   │       ╰─declName: DeclReferenceExprSyntax
+     │     │   │         ╰─baseName: identifier("standard")
+     │     │   ╰─rightParen: rightParen
+     */
     let initFunction = InitializerDeclSyntax(modifiers: .init(itemsBuilder: {
       .init(name: .keyword(.public))
     }),
-                                             signature: .init(parameterClause: .init(parameters: .init(itemsBuilder: {}))),
+                                             signature: .init(parameterClause: .init(parameters: .init(itemsBuilder: {
+      .init(firstName: .identifier("userDefaults"),
+            type: IdentifierTypeSyntax(name: .identifier("UserDefaults")),
+            defaultValue: InitializerClauseSyntax(equal: .equalToken(), value: MemberAccessExprSyntax(period: .periodToken(), name: .identifier("standard"))))
+    }))),
                                              body: .init(stringInterpolation: initString))
     
     let newMembers: [MemberBlockItemSyntax] = [.init(decl: cancellablesSyntax),
+                                               .init(decl: userDefaultsSyntax),
                                                .init(decl: deinitFunction),
                                                .init(decl: enumSyntax),
                                                .init(decl: initFunction),
                                                .init(decl: resetFunction),
                                                .init(decl: subscribeFunction)]
-    
     return newMembers.map { $0.decl }
   }
 }

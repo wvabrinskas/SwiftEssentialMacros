@@ -21,14 +21,25 @@ final class SettingsTests: XCTestCase {
           @Settings
           public final class ExampleSettings {
              var foo: Int = 42 
+          
+            public init(userDefaults: UserDefaults = .standard) {
+
+            }
           }
           """,
           expandedSource: """
           public final class ExampleSettings {
              @Published
              var foo: Int = 42 
+            @Published
+
+            public init(userDefaults: UserDefaults = .standard) {
+
+            }
 
               var cancellables: Set<AnyCancellable> = []
+
+              let userDefaults: UserDefaults
 
               deinit {
                 cancellables.forEach { value in
@@ -41,9 +52,10 @@ final class SettingsTests: XCTestCase {
                   case foo
               }
 
-              public init() {
-                  self.foo = UserDefaults.standard.value(forKey: ExampleSettings.SettingKeys.foo.rawValue) as? Int ?? 42
-                  subscribe()
+              public init(userDefaults: UserDefaults = .standard) {
+               self.userDefaults = userDefaults
+               self.foo = userDefaults.value(forKey: ExampleSettings.SettingKeys.foo.rawValue) as? Int ?? 42
+               subscribe()
                }
 
               public func reset() {
@@ -51,8 +63,8 @@ final class SettingsTests: XCTestCase {
               }
 
               internal func subscribe() {
-                  $foo.sink { value in
-                    UserDefaults.standard.set(value, forKey: ExampleSettings.SettingKeys.foo.rawValue)
+                  $foo.sink { [userDefaults] value in
+                    userDefaults.set(value, forKey: ExampleSettings.SettingKeys.foo.rawValue)
                   } .store(in: &cancellables)
 
               }

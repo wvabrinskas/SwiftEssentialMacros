@@ -9,15 +9,17 @@ final class ExampleSettings {
   public var bar: Int = 42
 }
 
-let settings = ExampleSettings()
+let defaults = UserDefaults.standard
+
+let settings = ExampleSettings(userDefaults: defaults)
 
 @MainActor func printSettings() {
   print(settings.foo)
   print(settings.bar)
 
   print("user defaults:")
-  print(UserDefaults.standard.string(forKey: ExampleSettings.SettingKeys.foo.rawValue))
-  print(UserDefaults.standard.string(forKey: ExampleSettings.SettingKeys.bar.rawValue))
+  print(defaults.string(forKey: ExampleSettings.SettingKeys.foo.rawValue))
+  print(defaults.string(forKey: ExampleSettings.SettingKeys.bar.rawValue))
   print("\r")
 }
 
