@@ -61,5 +61,14 @@ observation.observe()
 settings.foo = "update_foo"
 settings.bar = 45
 
+// Observation framework
+
+@SettingsObserve
+final class ExampleSettingsObserve {
+  public var foo: String = "bar"
+  public var bar: Int = 42
+}
+
+
 // run for 500 milliseconds
 RunLoop.main.run(until: .now + 0.5)

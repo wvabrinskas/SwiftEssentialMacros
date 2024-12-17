@@ -136,27 +136,7 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
                                                name: .identifier("subscribe"),
                                                signature: .init(parameterClause: .init(parameters: .init(itemsBuilder: {}))),
                                                body: .init(stringInterpolation: subscriptionString))
-    
-    /*
-     ─signature: FunctionSignatureSyntax
-     │     │ ╰─parameterClause: FunctionParameterClauseSyntax
-     │     │   ├─leftParen: leftParen
-     │     │   ├─parameters: FunctionParameterListSyntax
-     │     │   │ ╰─[0]: FunctionParameterSyntax
-     │     │   │   ├─attributes: AttributeListSyntax
-     │     │   │   ├─modifiers: DeclModifierListSyntax
-     │     │   │   ├─firstName: identifier("userDefaults")
-     │     │   │   ├─colon: colon
-     │     │   │   ├─type: IdentifierTypeSyntax
-     │     │   │   │ ╰─name: identifier("UserDefaults")
-     │     │   │   ╰─defaultValue: InitializerClauseSyntax
-     │     │   │     ├─equal: equal
-     │     │   │     ╰─value: MemberAccessExprSyntax
-     │     │   │       ├─period: period
-     │     │   │       ╰─declName: DeclReferenceExprSyntax
-     │     │   │         ╰─baseName: identifier("standard")
-     │     │   ╰─rightParen: rightParen
-     */
+
     let initFunction = InitializerDeclSyntax(modifiers: .init(itemsBuilder: {
       .init(name: .keyword(.public))
     }),
@@ -181,6 +161,8 @@ public struct SettingsImplMacro: MemberMacro, MemberAttributeMacro {
 @main
 struct SettingsPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-      SettingsImplMacro.self
+      SettingsImplMacro.self,
+      SettingsObserveImplMacro.self,
+      SettingsObserveDidSetMacro.self
     ]
 }
