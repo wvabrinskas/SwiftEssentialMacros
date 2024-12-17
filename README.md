@@ -41,6 +41,7 @@ final class ExampleSettings {
   }
 
   public init(userDefaults: UserDefaults = .standard) {
+      self.userDefaults = userDefaults
       self.foo = userDefaults.value(forKey: ExampleSettings.SettingKeys.foo.rawValue) as? String ?? "bar"
       self.bar = userDefaults.value(forKey: ExampleSettings.SettingKeys.bar.rawValue) as? Int ?? 42
       subscribe()
