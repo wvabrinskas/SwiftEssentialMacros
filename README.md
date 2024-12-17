@@ -2,7 +2,7 @@
 
 | Macro | Description | Example |
 |-------|-------------|---------|
-| @Settings | Creates a settings property that can be persisted using UserDefaults. It also makes each property a `@Published` property. | `@Setting` |
+| @Settings | Creates a settings property that can be persisted using UserDefaults. It also makes each property a `@Published` property. | `@Settings` |
 
 ## @Setting
 
